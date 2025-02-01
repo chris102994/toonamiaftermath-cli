@@ -1,0 +1,38 @@
+---
+name: upload binaries
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      upload_url:
+        description: 'The URL to upload the release asset to'
+        required: true
+        type: string
+jobs:
+  upload_binaries:
+    runs-on:
+      - ubuntu-latest
+    strategy:
+      matrix:
+          os:
+          - linux
+          - windows
+          - darwin
+          arch:
+          - amd64
+          - arm64
+    steps:
+      - name: Get the Cached Binaries
+        uses: actions/cache/restore@v4
+        with:
+          path: ./toonamiaftermath-cli_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}
+          key: toonamiaftermath-cli_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}
+      - name: Upload the binaries
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ inputs.upload_url }}
+          asset_path: ./toonamiaftermath-cli_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}
+          asset_name: toonamiaftermath-cli_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}

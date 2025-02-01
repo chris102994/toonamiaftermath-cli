@@ -1,0 +1,14 @@
+---
+name: CI
+run-name: CI
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.head_ref || github.ref }}
+
+jobs:
+  call_workflow:
+    uses: './.github/workflows/workflow.yml'
+    secrets: inherit

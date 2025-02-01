@@ -1,0 +1,29 @@
+---
+name: release
+on:
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      upload_url:
+        description: 'The URL to upload the release asset to'
+        value: ${{ jobs.release.outputs.upload_url }}
+
+jobs:
+  release:
+    runs-on:
+      - ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
+          body: |
+            ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'RC') || contains(github.ref_name, 'dev') }}

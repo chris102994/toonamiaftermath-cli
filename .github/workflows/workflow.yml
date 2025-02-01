@@ -1,0 +1,48 @@
+---
+name: ci
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  set_vars:
+    runs-on:
+      - ubuntu-latest
+    outputs:
+      release: ${{ steps.set_env.outputs.release }}
+    steps:
+      - name: Set Env
+        id: set_env
+        run: |
+          if [[ ${{ github.ref_name }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+)?$ ]]; then
+              echo "release=true" >> $GITHUB_OUTPUT
+          else
+              echo "release=false" >> $GITHUB_OUTPUT
+          fi
+  call_build_binaries:
+    uses: './.github/workflows/build_binaries.yml'
+    secrets: inherit
+  call_build_push_docker:
+    uses: './.github/workflows/build_push_docker.yml'
+    secrets: inherit
+    with:
+      release: ${{ needs.set_vars.outputs.release == 'true' }}
+    needs:
+      - set_vars
+  call_release:
+    uses: './.github/workflows/release.yml'
+    secrets: inherit
+    if: github.event_name == 'push' && needs.set_vars.outputs.release == 'true'
+    needs:
+      - set_vars
+      - call_build_binaries
+      - call_build_push_docker
+  call_upload_binaries:
+    uses: './.github/workflows/upload_binaries.yml'
+    secrets: inherit
+    if: github.event_name == 'push' && needs.set_vars.outputs.release == 'true'
+    with:
+      upload_url: ${{ needs.call_release.outputs.upload_url }}
+    needs:
+      - set_vars
+      - call_release
