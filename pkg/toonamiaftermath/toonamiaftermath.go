@@ -386,18 +386,24 @@ func (t *ToonamiAftermath) Run() error {
 
 			t.XMLTVOutput.Programmes = append(t.XMLTVOutput.Programmes, &programme)
 		}
+	}
 
-		for programmeIndex, programme := range t.XMLTVOutput.Programmes {
-			if programmeIndex != len(t.XMLTVOutput.Programmes)-1 && programme.Channel == t.XMLTVOutput.Programmes[programmeIndex+1].Channel {
-				programme.Stop = t.XMLTVOutput.Programmes[programmeIndex+1].Start
+	for position, programme := range t.XMLTVOutput.Programmes {
+		if position < len(t.XMLTVOutput.Programmes)-1 {
+			if programme.Channel == t.XMLTVOutput.Programmes[position+1].Channel {
+				programme.Stop = t.XMLTVOutput.Programmes[position+1].Start
 			} else {
 				log.WithFields(log.Fields{
-					"programmeIndex": programmeIndex,
-					"programme":      programme,
-				}).Trace("Programme last index. No end time.")
+					"position":  position,
+					"programme": programme,
+				}).Trace("Programme next channel. No end time.")
 			}
+		} else {
+			log.WithFields(log.Fields{
+				"position":  position,
+				"programme": programme,
+			}).Trace("Programme last index. No end time.")
 		}
-
 	}
 
 	return nil
