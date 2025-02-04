@@ -36,4 +36,6 @@ COPY --from=builder /toonamiaftermath-cli .
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 USER 10000
 
+ENV CACHE_FILE=/config/cache.json
+
 ENTRYPOINT ["./toonamiaftermath-cli", "run", "--config", "/config/config.yaml"]

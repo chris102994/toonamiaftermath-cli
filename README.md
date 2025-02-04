@@ -32,6 +32,7 @@ Usage:
   toonamiaftermath run [flags]
 
 Flags:
+  -C, --cache-file string        Path to the cache file (default "cache.json")
   -c, --cron-expression string   The cron schedule to run the command
   -h, --help                     help for run
   -m, --m3u-output string        Path to the M3U output file (default "index.m3u")
@@ -63,6 +64,7 @@ Global Flags:
 | `CRON_EXPRESSION` | `cron.expression`    | The cron schedule to run the command                                       |
 | `M3U_OUTPUT`      | `run.m3u_output`     | Path to the M3U output file (default "index.m3u")                          |
 | `XMLTV_OUTPUT`    | `run.xmltv_output`   | Path to the XMLTV output file (default "index.xml")                        |
+| `CACHE_FILE`      | `run.cache_file`     | Path to the cache file (default "cache.json")                              |
 
 ##### Example Configuration File
 
@@ -78,4 +80,5 @@ cron:
 run:
   xmltv_output: "index.xml"
   m3u_output: "index.m3u"
+  cache_file: "cache.json"
 ```

@@ -1,6 +1,7 @@
 package run
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	m3u "github.com/chris102994/go-m3u/pkg/m3u/models"
 	"github.com/chris102994/toonamiaftermath-cli/internal/config"
@@ -50,14 +51,17 @@ var runCmd = &cobra.Command{
 func init() {
 	viper.SetDefault("Run.xmltv_output", "index.xml")
 	viper.SetDefault("Run.m3u_output", "index.m3u")
+	viper.SetDefault("Run.cache_file", "cache.json")
 
 	runCmd.Flags().StringP("cron-expression", "c", "", "The cron schedule to run the command")
 	runCmd.Flags().StringP("xmltv-output", "x", "index.xml", "Path to the XMLTV output file")
 	runCmd.Flags().StringP("m3u-output", "m", "index.m3u", "Path to the M3U output file")
+	runCmd.Flags().StringP("cache-file", "C", "cache.json", "Path to the cache file")
 
 	viper.BindPFlag("Cron.Expression", runCmd.Flag("cron-expression"))
 	viper.BindPFlag("Run.xmltv_output", runCmd.Flag("xmltv-output"))
 	viper.BindPFlag("Run.m3u_output", runCmd.Flag("m3u-output"))
+	viper.BindPFlag("Run.cache_file", runCmd.Flag("cache-file"))
 }
 
 func NewRunCmd(c *config.Config) *cobra.Command {
@@ -74,6 +78,22 @@ func runToonamiAftermathScraping() {
 
 func handleToonamiAftermathScraping() error {
 	toonamiaftermathConfig := toonamiaftermath.New()
+
+	if inputConfig.Run.CacheFile != "" {
+		jsonData, err := os.ReadFile(inputConfig.Run.CacheFile)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Failed to read cache file")
+		}
+		err = json.Unmarshal(jsonData, &toonamiaftermathConfig.EpisodeCache)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Failed to unmarshal cache data")
+		}
+	}
+
 	err := toonamiaftermathConfig.Run()
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -114,6 +134,26 @@ func handleToonamiAftermathScraping() error {
 			"error": err,
 		}).Error("Failed to write M3U output to file")
 		return err
+	}
+
+	// Write the cache to a file
+	if inputConfig.Run.CacheFile != "" {
+		log.WithFields(log.Fields{
+			"cacheFile": inputConfig.Run.CacheFile,
+		}).Info("Writing cache to file")
+
+		cacheData, err := json.Marshal(toonamiaftermathConfig.EpisodeCache)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Failed to marshal cache data")
+		}
+		err = os.WriteFile(inputConfig.Run.CacheFile, cacheData, 0644)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Failed to write cache to file")
+		}
 	}
 
 	return nil

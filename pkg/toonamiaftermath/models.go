@@ -85,6 +85,10 @@ type EpisodeInfo struct {
 	Episode       Episode   `json:"episode"`
 }
 
+type EpisodeCache struct {
+	Episodes map[string]EpisodeInfo `json:"episodeCache"`
+}
+
 func IsEpisodeInfoEmpty(ei EpisodeInfo) bool {
 	return reflect.DeepEqual(ei, EpisodeInfo{})
 }

@@ -16,7 +16,6 @@ import (
 )
 
 // TODO:
-// - Add a cache for the episode info
 // - Cleanup the code and methods
 // - Make logging concise
 // - Test the code
@@ -28,7 +27,7 @@ type ToonamiAftermath struct {
 	transport *http.Transport
 	client    *http.Client
 
-	episodeCache map[string]EpisodeInfo
+	EpisodeCache EpisodeCache
 }
 
 func New() *ToonamiAftermath {
@@ -40,7 +39,9 @@ func New() *ToonamiAftermath {
 		Timeout:   10 * time.Second,
 	}
 
-	episodeCache := make(map[string]EpisodeInfo)
+	episodeCache := EpisodeCache{
+		Episodes: make(map[string]EpisodeInfo),
+	}
 
 	this := &ToonamiAftermath{
 		M3UOutput: m3u.M3U{
@@ -59,7 +60,7 @@ func New() *ToonamiAftermath {
 		},
 		transport:    transport,
 		client:       client,
-		episodeCache: episodeCache,
+		EpisodeCache: episodeCache,
 	}
 
 	this.M3UOutput.PlaylistHeaders = append(this.M3UOutput.PlaylistHeaders, m3u.PlaylistHeader{})
@@ -433,7 +434,7 @@ func (t *ToonamiAftermath) GetTAChannels(channelsUrl string) ([]TAChannel, error
 func (t *ToonamiAftermath) getEpisodeInfo(episodeInfoUrl string) (EpisodeInfo, error) {
 	thisEpisodeInfo := EpisodeInfo{}
 
-	if episodeInfo, ok := t.episodeCache[episodeInfoUrl]; ok {
+	if episodeInfo, ok := t.EpisodeCache.Episodes[episodeInfoUrl]; ok {
 		log.WithFields(log.Fields{
 			"episodeInfoUrl": episodeInfoUrl,
 		}).Trace("Using Cached Episode Info")
@@ -470,7 +471,7 @@ func (t *ToonamiAftermath) getEpisodeInfo(episodeInfoUrl string) (EpisodeInfo, e
 		log.WithFields(log.Fields{
 			"episodeInfoUrl": episodeInfoUrl,
 		}).Trace("Caching Episode Info")
-		t.episodeCache[episodeInfoUrl] = thisEpisodeInfo
+		t.EpisodeCache.Episodes[episodeInfoUrl] = thisEpisodeInfo
 	}
 
 	return thisEpisodeInfo, nil
