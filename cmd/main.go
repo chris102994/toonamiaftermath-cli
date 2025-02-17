@@ -60,7 +60,12 @@ func InitConfig() {
 	if configFile != "" {
 		viper.SetConfigFile(configFile)
 		err := viper.ReadInConfig()
-		cobra.CheckErr(err)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"config": configFile,
+				"err":    err,
+			}).Warn("Config file issues. Continuing with defaults.")
+		}
 	}
 	viper.AutomaticEnv()
 }
