@@ -307,7 +307,7 @@ func (t *ToonamiAftermath) Run() error {
 
 					if episodeInfo.Episode.AirDate != "" {
 						var parsedDate time.Time
-						formats := []string{"2 Jan 2006", "2 Jan. 2006", "2006", "Jan. 2006"}
+						formats := []string{"2 Jan 2006", "2 Jan. 2006", "2006", "Jan. 2006", "Jan 2006"}
 						for _, format := range formats {
 							parsedDate, err = time.Parse(format, episodeInfo.Episode.AirDate)
 							if err == nil {
