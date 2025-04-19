@@ -17,12 +17,11 @@ import (
 
 // TODO:
 // - Cleanup the code and methods
-// - Make logging concise
 // - Test the code
 
 type ToonamiAftermath struct {
-	M3UOutput   m3u.M3U
-	XMLTVOutput xmltv.TV
+	M3UOutput    m3u.M3U
+	XMLTVBuilder *xmltv.TVBuilder
 
 	transport *http.Transport
 	client    *http.Client
@@ -48,16 +47,13 @@ func New() *ToonamiAftermath {
 			PlaylistHeaders: make([]m3u.PlaylistHeader, 0),
 			Channels:        make([]m3u.Channel, 0),
 		},
-		XMLTVOutput: xmltv.TV{
-			Date:              time.Now().Format("2006-01-02"),
-			SourceInfoURL:     "https://api.toonamiaftermath.com",
-			SourceInfoName:    "Toonami Aftermath",
-			SourceDataURL:     "https://api.toonamiaftermath.com",
-			GeneratorInfoName: "Toonami Aftermath CLI",
-			GeneratorInfoURL:  "https://github.com/chris102994/toonamiaftermath-cli",
-			Channels:          make([]*xmltv.Channel, 0),
-			Programmes:        make([]*xmltv.Programme, 0),
-		},
+		XMLTVBuilder: xmltv.NewTVBuilder().
+			SetDate(time.Now().Format("2006-01-02")).
+			SetSourceInfoURL("https://api.toonamiaftermath.com").
+			SetSourceInfoName("Toonami Aftermath").
+			SetSourceDataURL("https://api.toonamiaftermath.com").
+			SetGeneratorInfoName("Toonami Aftermath CLI").
+			SetSourceInfoURL("https://github.com/chris102994/toonamiaftermath-cli"),
 		transport:    transport,
 		client:       client,
 		EpisodeCache: episodeCache,
@@ -71,7 +67,7 @@ func New() *ToonamiAftermath {
 func (t *ToonamiAftermath) Run() error {
 	log.WithFields(log.Fields{
 		"m3u":   t.M3UOutput,
-		"xmltv": t.XMLTVOutput,
+		"xmltv": t.XMLTVBuilder,
 	}).Info("Scraping With...")
 
 	baseUrl := "https://api.toonamiaftermath.com"
@@ -141,16 +137,17 @@ func (t *ToonamiAftermath) Run() error {
 			URL:   m3uUrl,
 		})
 
-		t.XMLTVOutput.Channels = append(t.XMLTVOutput.Channels, &xmltv.Channel{
-			ID: fmt.Sprintf("%v", index+1),
-			DisplayNames: append(make([]*xmltv.DisplayName, 0), &xmltv.DisplayName{
-				Lang: "en",
-				Text: taChannel.Name,
-			}),
-			URLs: append(make([]*xmltv.URL, 0), &xmltv.URL{
-				Text: channelsUrl,
-			}),
-		})
+		t.XMLTVBuilder.AddChannel(
+			xmltv.NewChannelBuilder().
+				SetID(fmt.Sprintf("%v", index+1)).
+				AddDisplayName(xmltv.NewDisplayNameBuilder().
+					SetLang("en").
+					SetText(taChannel.Name).
+					Build()).
+				AddURL(xmltv.NewURLBuilder().
+					SetText(m3uUrl).
+					Build()).
+				Build())
 
 		log.WithFields(log.Fields{
 			"channelName": taChannel.Name,
@@ -197,7 +194,7 @@ func (t *ToonamiAftermath) Run() error {
 			return err
 		}
 
-		for _, mediaItem := range taMedia {
+		for position, mediaItem := range taMedia {
 			log.WithFields(log.Fields{
 				"mediaItem": mediaItem,
 			}).Trace("Media Item")
@@ -211,6 +208,27 @@ func (t *ToonamiAftermath) Run() error {
 				startTime = fmt.Sprintf("%v %v", startTime, "-0300")
 			} else {
 				startTime = fmt.Sprintf("%v %v", startTime, "+0000")
+			}
+
+			// Look forward to set the Stop time
+			var stopTime string
+			if position < len(taMedia)-1 {
+				nextMediaItem := taMedia[position+1]
+				nextParsedTime, err := time.Parse(time.RFC3339, nextMediaItem.StartDate)
+				if err == nil {
+					thisStopTime := nextParsedTime.Format("20060102150405")
+					if westOffset {
+						thisStopTime = fmt.Sprintf("%v %v", thisStopTime, "-0300")
+					} else {
+						thisStopTime = fmt.Sprintf("%v %v", thisStopTime, "+0000")
+					}
+					stopTime = thisStopTime
+				}
+			} else {
+				log.WithFields(log.Fields{
+					"position":  position,
+					"mediaItem": mediaItem,
+				}).Trace("Programme last index. No end time.")
 			}
 
 			episodeUrlValues := url.Values{}
@@ -231,32 +249,26 @@ func (t *ToonamiAftermath) Run() error {
 				episodeUrlValues["episode"] = []string{fmt.Sprintf("%v", mediaItem.EpisodeNumber)}
 			}
 
-			programme := xmltv.Programme{
-				Channel: channelId,
-				Start:   startTime,
-			}
+			programmeBuilder := xmltv.NewProgrammeBuilder().
+				SetChannel(channelId).
+				SetStart(startTime).
+				SetStop(stopTime)
 
 			if mediaItem.Name != "" {
-				programme.Title = []*xmltv.Title{
-					{
-						Lang: "en",
-						Text: mediaItem.Name,
-					},
-				}
+				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
+					SetLang("en").
+					SetText(mediaItem.Name).
+					Build())
 			} else if mediaItem.Info.Fullname != "" {
-				programme.Title = []*xmltv.Title{
-					{
-						Lang: "en",
-						Text: mediaItem.Info.Fullname,
-					},
-				}
+				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
+					SetLang("en").
+					SetText(mediaItem.Info.Fullname).
+					Build())
 			} else if mediaItem.BlockName != "" {
-				programme.Title = []*xmltv.Title{
-					{
-						Lang: "en",
-						Text: mediaItem.BlockName,
-					},
-				}
+				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
+					SetLang("en").
+					SetText(mediaItem.BlockName).
+					Build())
 			} else {
 				log.WithFields(log.Fields{
 					"mediaItem": mediaItem,
@@ -272,38 +284,25 @@ func (t *ToonamiAftermath) Run() error {
 				}
 
 				if !IsEpisodeInfoEmpty(episodeInfo) {
-					programme.Title = []*xmltv.Title{
-						{
-							Lang: "en",
-							Text: episodeInfo.Name,
-						},
-					}
-
-					programme.SubTitle = []*xmltv.SubTitle{
-						{
-							Lang: "en",
-							Text: episodeInfo.Episode.Name,
-						},
-					}
-
-					programme.Image = []*xmltv.Image{
-						{
-							Text: episodeInfo.Image,
-						},
-					}
-
-					programme.Icons = []*xmltv.Icon{
-						{
-							Src: episodeInfo.Image,
-						},
-					}
-
-					programme.Desc = []*xmltv.Desc{
-						{
-							Lang: "en",
-							Text: episodeInfo.Episode.Summary,
-						},
-					}
+					programmeBuilder.
+						AddTitle(xmltv.NewTitleBuilder().
+							SetLang("en").
+							SetText(episodeInfo.Name).
+							Build()).
+						AddSubTitle(xmltv.NewSubTitleBuilder().
+							SetLang("en").
+							SetText(episodeInfo.Episode.Name).
+							Build()).
+						AddImage(xmltv.NewImageBuilder().
+							SetText(episodeInfo.Image).
+							Build()).
+						AddIcon(xmltv.NewIconBuilder().
+							SetSrc(episodeInfo.Image).
+							Build()).
+						AddDesc(xmltv.NewDescBuilder().
+							SetLang("en").
+							SetText(episodeInfo.Episode.Summary).
+							Build())
 
 					if episodeInfo.Episode.AirDate != "" {
 						var parsedDate time.Time
@@ -318,43 +317,36 @@ func (t *ToonamiAftermath) Run() error {
 						if err != nil {
 							log.Fatal(err)
 						}
-						programme.Date = parsedDate.Format("20060102")
+						programmeBuilder.SetDate(parsedDate.Format("20060102"))
 					}
 
 					unusableRatings := []string{"", "Not Rated"}
 					if !slices.Contains(unusableRatings, episodeInfo.ContentRating) {
-						programme.Rating = []*xmltv.Rating{
-							{
-								System: "VCHIP",
-								Value:  episodeInfo.ContentRating,
-							},
-						}
+						programmeBuilder.AddRating(xmltv.NewRatingBuilder().
+							SetSystem("VCHIP").
+							SetValue(episodeInfo.ContentRating).
+							Build())
 					}
 
 					if episodeInfo.Rating != 0 {
-						programme.StarRating = []*xmltv.StarRating{
-							{
-								System: "imdb",
-								Value:  fmt.Sprintf("%v/10", episodeInfo.Rating),
-							},
-						}
+						programmeBuilder.AddStarRating(xmltv.NewStarRatingBuilder().
+							SetSystem("imdb").
+							SetValue(fmt.Sprintf("%v/10", episodeInfo.Rating)).
+							Build())
 					}
 
 					if episodeInfo.Episode.Season != 0 && episodeInfo.Episode.EpNum != 0 {
-						programme.EpisodeNum = []*xmltv.EpisodeNum{
-							{
-								System: "xmltv_ns",
-								Text:   fmt.Sprintf("%v.%v.0/1", episodeInfo.Episode.Season-1, episodeInfo.Episode.EpNum-1),
-							},
-						}
+						programmeBuilder.AddEpisodeNum(xmltv.NewEpisodeNumBuilder().
+							SetSystem("xmltv_ns").
+							SetText(fmt.Sprintf("%v.%v.0/1", episodeInfo.Episode.Season-1, episodeInfo.Episode.EpNum-1)).
+							Build())
 					}
 
-					programme.Category = []*xmltv.Category{}
 					for _, category := range episodeInfo.Genres {
-						programme.Category = append(programme.Category, &xmltv.Category{
-							Lang: "en",
-							Text: category,
-						})
+						programmeBuilder.AddCategory(xmltv.NewCategoryBuilder().
+							SetLang("en").
+							SetText(category).
+							Build())
 					}
 
 					unwantedCredits := []string{
@@ -363,16 +355,23 @@ func (t *ToonamiAftermath) Run() error {
 						"See full cast & crew",
 						"See more",
 					}
+
 					writers := slices.DeleteFunc(episodeInfo.Creators, func(s string) bool {
 						return slices.Contains(unwantedCredits, s)
 					})
 					producers := slices.DeleteFunc(episodeInfo.ProductionCo, func(s string) bool {
 						return slices.Contains(unwantedCredits, s)
 					})
-					programme.Credits = &xmltv.Credits{
-						Writers:   writers,
-						Producers: producers,
+
+					creditsBuilder := xmltv.NewCreditsBuilder()
+					for _, writer := range writers {
+						creditsBuilder.AddWriter(writer)
 					}
+					for _, producer := range producers {
+						creditsBuilder.AddProducer(producer)
+					}
+
+					programmeBuilder.SetCredits(creditsBuilder.Build())
 				} else {
 					log.WithFields(log.Fields{
 						"episodeUrl": episodeUrl,
@@ -385,28 +384,9 @@ func (t *ToonamiAftermath) Run() error {
 				"mediaItem": mediaItem,
 			}).Trace("Adding Media Item")
 
-			t.XMLTVOutput.Programmes = append(t.XMLTVOutput.Programmes, &programme)
+			t.XMLTVBuilder.AddProgramme(programmeBuilder.Build())
 		}
 	}
-
-	for position, programme := range t.XMLTVOutput.Programmes {
-		if position < len(t.XMLTVOutput.Programmes)-1 {
-			if programme.Channel == t.XMLTVOutput.Programmes[position+1].Channel {
-				programme.Stop = t.XMLTVOutput.Programmes[position+1].Start
-			} else {
-				log.WithFields(log.Fields{
-					"position":  position,
-					"programme": programme,
-				}).Trace("Programme next channel. No end time.")
-			}
-		} else {
-			log.WithFields(log.Fields{
-				"position":  position,
-				"programme": programme,
-			}).Trace("Programme last index. No end time.")
-		}
-	}
-
 	return nil
 }
 
