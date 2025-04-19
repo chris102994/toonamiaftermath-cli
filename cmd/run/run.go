@@ -103,7 +103,7 @@ func handleToonamiAftermathScraping() error {
 	}
 
 	// Write the XMLTV output to a file
-	xmlTvOutput, err := xml.MarshalIndent(toonamiaftermathConfig.XMLTVOutput, "", "  ")
+	xmlTvOutput, err := xml.MarshalIndent(toonamiaftermathConfig.XMLTVBuilder.Build(), "", "  ")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,

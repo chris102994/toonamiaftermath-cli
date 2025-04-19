@@ -3,9 +3,8 @@ module github.com/chris102994/toonamiaftermath-cli
 go 1.21
 
 require (
-	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/chris102994/go-m3u v0.0.0-20241231213212-3d378aaf057d
-	github.com/chris102994/go-xmltv v0.0.0-20241220033631-0cda146d444e
+	github.com/chris102994/go-xmltv v0.0.0-20250419204042-0d31806e8d2a
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
