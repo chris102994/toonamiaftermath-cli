@@ -3,7 +3,7 @@ module github.com/chris102994/toonamiaftermath-cli
 go 1.21
 
 require (
-	github.com/chris102994/go-m3u v0.0.0-20241231213212-3d378aaf057d
+	github.com/chris102994/go-m3u v0.0.0-20250419234134-aba9160ce469
 	github.com/chris102994/go-xmltv v0.0.0-20250419204042-0d31806e8d2a
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.9.3

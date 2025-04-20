@@ -1,5 +1,7 @@
 github.com/chris102994/go-m3u v0.0.0-20241231213212-3d378aaf057d h1:yA0rb+QGvu5b0aV+jSFLt08tiH7N/staB5wpK0dSPTs=
 github.com/chris102994/go-m3u v0.0.0-20241231213212-3d378aaf057d/go.mod h1:nMxLfcSj9yGauOXrPzhNxuVwBElefJywNNfcrPkygGk=
+github.com/chris102994/go-m3u v0.0.0-20250419234134-aba9160ce469 h1:IfEahzyvTYLixoLlS2qRivlbyOVrWt3FOyUIAB9QklA=
+github.com/chris102994/go-m3u v0.0.0-20250419234134-aba9160ce469/go.mod h1:nMxLfcSj9yGauOXrPzhNxuVwBElefJywNNfcrPkygGk=
 github.com/chris102994/go-xmltv v0.0.0-20250419204042-0d31806e8d2a h1:OgtUVzR14BwwzL7ZYW8ie9CwH4GcstElELkgtJIQZCM=
 github.com/chris102994/go-xmltv v0.0.0-20250419204042-0d31806e8d2a/go.mod h1:bC+2CphKNHKEuMJTa/tmhO86g4wrlg7r3LaOeh038vo=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
