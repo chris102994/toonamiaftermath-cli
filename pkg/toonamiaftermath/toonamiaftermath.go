@@ -20,8 +20,8 @@ import (
 // - Test the code
 
 type ToonamiAftermath struct {
-	M3UOutput    m3u.M3U
 	XMLTVBuilder *xmltv.TVBuilder
+	M3UBuilder   *m3u.M3UBuilder
 
 	transport *http.Transport
 	client    *http.Client
@@ -43,10 +43,11 @@ func New() *ToonamiAftermath {
 	}
 
 	this := &ToonamiAftermath{
-		M3UOutput: m3u.M3U{
-			PlaylistHeaders: make([]m3u.PlaylistHeader, 0),
-			Channels:        make([]m3u.Channel, 0),
-		},
+		M3UBuilder: m3u.NewM3UBuilder().
+			AddPlaylistHeader(m3u.NewPlaylistHeaderBuilder().
+				SetMetadata(m3u.NewPlaylistHeaderMetadataBuilder().
+					Build()).
+				Build()),
 		XMLTVBuilder: xmltv.NewTVBuilder().
 			SetDate(time.Now().Format("2006-01-02")).
 			SetSourceInfoURL("https://api.toonamiaftermath.com").
@@ -59,14 +60,12 @@ func New() *ToonamiAftermath {
 		EpisodeCache: episodeCache,
 	}
 
-	this.M3UOutput.PlaylistHeaders = append(this.M3UOutput.PlaylistHeaders, m3u.PlaylistHeader{})
-
 	return this
 }
 
 func (t *ToonamiAftermath) Run() error {
 	log.WithFields(log.Fields{
-		"m3u":   t.M3UOutput,
+		"m3u":   t.M3UBuilder,
 		"xmltv": t.XMLTVBuilder,
 	}).Info("Scraping With...")
 
@@ -123,19 +122,19 @@ func (t *ToonamiAftermath) Run() error {
 
 		channelId := fmt.Sprintf("%v", index+1)
 
-		t.M3UOutput.Channels = append(t.M3UOutput.Channels, m3u.Channel{
-			Duration: -0,
-			Metadata: m3u.ChannelMetadata{
-				ChannelID:   channelId,
-				GroupTitle:  "Toonami Aftermath",
-				TvgCountry:  "us",
-				TvgID:       taChannel.Name,
-				TvgLanguage: "en",
-				TvgName:     taChannel.Name,
-			},
-			Title: taChannel.Name,
-			URL:   m3uUrl,
-		})
+		t.M3UBuilder.AddChannel(m3u.NewChannelBuilder().
+			SetDuration(-0).
+			SetTitle(taChannel.Name).
+			SetURL(m3uUrl).
+			SetMetadata(m3u.NewChannelMetadataBuilder().
+				SetChannelID(channelId).
+				SetGroupTitle("Toonami Aftermath").
+				SetTvgCountry("us").
+				SetTvgID(taChannel.Name).
+				SetTvgLanguage("en").
+				SetTvgName(taChannel.Name).
+				Build()).
+			Build())
 
 		t.XMLTVBuilder.AddChannel(
 			xmltv.NewChannelBuilder().

@@ -120,7 +120,7 @@ func handleToonamiAftermathScraping() error {
 	}
 
 	// Write the M3U output to a file
-	m3uOutput, err := m3u.Marshal(&toonamiaftermathConfig.M3UOutput)
+	m3uOutput, err := m3u.Marshal(toonamiaftermathConfig.M3UBuilder.Build())
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
