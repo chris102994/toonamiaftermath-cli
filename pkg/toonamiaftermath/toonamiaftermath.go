@@ -282,6 +282,13 @@ func (t *ToonamiAftermath) Run() error {
 					return fmt.Errorf("failed to get episode info: %w", err)
 				}
 
+				episodeImage := ""
+				if episodeInfo.Episode.Image != "" {
+					episodeImage = episodeInfo.Episode.Image
+				} else if episodeInfo.Image != "" {
+					episodeImage = episodeInfo.Image
+				}
+
 				if !IsEpisodeInfoEmpty(episodeInfo) {
 					programmeBuilder.
 						AddTitle(xmltv.NewTitleBuilder().
@@ -293,10 +300,10 @@ func (t *ToonamiAftermath) Run() error {
 							SetText(episodeInfo.Episode.Name).
 							Build()).
 						AddImage(xmltv.NewImageBuilder().
-							SetText(episodeInfo.Image).
+							SetText(episodeImage).
 							Build()).
 						AddIcon(xmltv.NewIconBuilder().
-							SetSrc(episodeInfo.Image).
+							SetSrc(episodeImage).
 							Build()).
 						AddDesc(xmltv.NewDescBuilder().
 							SetLang("en").
