@@ -73,7 +73,7 @@ func (t *ToonamiAftermath) Run() error {
 
 	// Get Channels
 	channelsParams := url.Values{
-		"startDate": {time.Now().Format("2006-01-02T15:04:05Z")},
+		"startDate": {time.Now().Add(-2 * time.Hour).Format(time.RFC3339)},
 	}
 	channelsUrl := baseUrl + "/channelsCurrentMedia" + "?" + channelsParams.Encode()
 
@@ -160,7 +160,7 @@ func (t *ToonamiAftermath) Run() error {
 
 		guideParams := url.Values{
 			"scheduleName": {scheduleNameString},
-			"dateString":   {time.Now().Format("2006-01-02T15:04:05Z")},
+			"dateString":   {time.Now().Add(-2 * time.Hour).Format(time.RFC3339)},
 			"count":        {"200"},
 		}
 		guideUrl := baseUrl + "/media" + "?" + guideParams.Encode()
