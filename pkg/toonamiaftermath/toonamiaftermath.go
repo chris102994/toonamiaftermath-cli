@@ -73,7 +73,7 @@ func (t *ToonamiAftermath) Run() error {
 
 	// Get Channels
 	channelsParams := url.Values{
-		"startDate": {time.Now().Format("2006-01-02T15:04:05Z")},
+		"startDate": {time.Now().Add(-2 * time.Hour).Format(time.RFC3339)},
 	}
 	channelsUrl := baseUrl + "/channelsCurrentMedia" + "?" + channelsParams.Encode()
 
@@ -158,11 +158,13 @@ func (t *ToonamiAftermath) Run() error {
 		scheduleNameString := strings.ReplaceAll(taChannel.Name, "East", "EST")
 		scheduleNameString = strings.ReplaceAll(scheduleNameString, "West", "EST")
 
+		timeOffset, _ := time.ParseDuration("-3h")
 		guideParams := url.Values{
 			"scheduleName": {scheduleNameString},
-			"dateString":   {time.Now().Format("2006-01-02T15:04:05Z")},
+			"dateString":   {time.Now().Add(timeOffset).Format(time.RFC3339)},
 			"count":        {"200"},
 		}
+
 		guideUrl := baseUrl + "/media" + "?" + guideParams.Encode()
 
 		guideResp, err := t.client.Get(guideUrl)
@@ -253,15 +255,15 @@ func (t *ToonamiAftermath) Run() error {
 				SetStart(startTime).
 				SetStop(stopTime)
 
-			if mediaItem.Name != "" {
-				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
-					SetLang("en").
-					SetText(mediaItem.Name).
-					Build())
-			} else if mediaItem.Info.Fullname != "" {
+			if mediaItem.Info.Fullname != "" {
 				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
 					SetLang("en").
 					SetText(mediaItem.Info.Fullname).
+					Build())
+			} else if mediaItem.Name != "" {
+				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
+					SetLang("en").
+					SetText(mediaItem.Name).
 					Build())
 			} else if mediaItem.BlockName != "" {
 				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
@@ -283,7 +285,9 @@ func (t *ToonamiAftermath) Run() error {
 				}
 
 				episodeImage := ""
-				if episodeInfo.Episode.Image != "" {
+				if mediaItem.Info.Image != "" {
+					episodeImage = mediaItem.Info.Image
+				} else if episodeInfo.Episode.Image != "" {
 					episodeImage = episodeInfo.Episode.Image
 				} else if episodeInfo.Image != "" {
 					episodeImage = episodeInfo.Image
