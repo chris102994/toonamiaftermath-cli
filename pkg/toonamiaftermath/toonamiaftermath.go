@@ -158,11 +158,13 @@ func (t *ToonamiAftermath) Run() error {
 		scheduleNameString := strings.ReplaceAll(taChannel.Name, "East", "EST")
 		scheduleNameString = strings.ReplaceAll(scheduleNameString, "West", "EST")
 
+		timeOffset, _ := time.ParseDuration("-3h")
 		guideParams := url.Values{
 			"scheduleName": {scheduleNameString},
-			"dateString":   {time.Now().Add(-2 * time.Hour).Format(time.RFC3339)},
+			"dateString":   {time.Now().Add(timeOffset).Format(time.RFC3339)},
 			"count":        {"200"},
 		}
+
 		guideUrl := baseUrl + "/media" + "?" + guideParams.Encode()
 
 		guideResp, err := t.client.Get(guideUrl)
