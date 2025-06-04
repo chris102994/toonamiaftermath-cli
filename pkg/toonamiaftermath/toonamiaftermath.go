@@ -285,7 +285,9 @@ func (t *ToonamiAftermath) Run() error {
 				}
 
 				episodeImage := ""
-				if episodeInfo.Episode.Image != "" {
+				if mediaItem.Info.Image != "" {
+					episodeImage = mediaItem.Info.Image
+				} else if episodeInfo.Episode.Image != "" {
 					episodeImage = episodeInfo.Episode.Image
 				} else if episodeInfo.Image != "" {
 					episodeImage = episodeInfo.Image
