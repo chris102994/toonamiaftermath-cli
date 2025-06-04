@@ -255,15 +255,15 @@ func (t *ToonamiAftermath) Run() error {
 				SetStart(startTime).
 				SetStop(stopTime)
 
-			if mediaItem.Name != "" {
-				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
-					SetLang("en").
-					SetText(mediaItem.Name).
-					Build())
-			} else if mediaItem.Info.Fullname != "" {
+			if mediaItem.Info.Fullname != "" {
 				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
 					SetLang("en").
 					SetText(mediaItem.Info.Fullname).
+					Build())
+			} else if mediaItem.Name != "" {
+				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
+					SetLang("en").
+					SetText(mediaItem.Name).
 					Build())
 			} else if mediaItem.BlockName != "" {
 				programmeBuilder.AddTitle(xmltv.NewTitleBuilder().
