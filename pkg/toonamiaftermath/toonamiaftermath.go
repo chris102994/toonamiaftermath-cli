@@ -162,7 +162,7 @@ func (t *ToonamiAftermath) Run() error {
 		guideParams := url.Values{
 			"scheduleName": {scheduleNameString},
 			"dateString":   {time.Now().Add(timeOffset).Format(time.RFC3339)},
-			"count":        {"200"},
+			"count":        {"150"},
 		}
 
 		guideUrl := baseUrl + "/media" + "?" + guideParams.Encode()
@@ -180,6 +180,7 @@ func (t *ToonamiAftermath) Run() error {
 		if len(guideBytes) == 0 {
 			log.WithFields(log.Fields{
 				"channelName": taChannel.Name,
+				"guideUrl":    guideUrl,
 			}).Warn("No Guide Data. Skipping. . . ")
 			continue
 		}
