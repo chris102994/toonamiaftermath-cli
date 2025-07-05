@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -63,10 +64,11 @@ func New() *ToonamiAftermath {
 	return this
 }
 
-func (t *ToonamiAftermath) Run() error {
+func (t *ToonamiAftermath) Run(scrapeCount int) error {
 	log.WithFields(log.Fields{
-		"m3u":   t.M3UBuilder,
-		"xmltv": t.XMLTVBuilder,
+		"m3u":         t.M3UBuilder,
+		"xmltv":       t.XMLTVBuilder,
+		"scrapeCount": scrapeCount,
 	}).Info("Scraping With...")
 
 	baseUrl := "https://api.toonamiaftermath.com"
@@ -162,7 +164,7 @@ func (t *ToonamiAftermath) Run() error {
 		guideParams := url.Values{
 			"scheduleName": {scheduleNameString},
 			"dateString":   {time.Now().Add(timeOffset).Format(time.RFC3339)},
-			"count":        {"150"},
+			"count":        {strconv.Itoa(scrapeCount)},
 		}
 
 		guideUrl := baseUrl + "/media" + "?" + guideParams.Encode()

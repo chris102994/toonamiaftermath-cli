@@ -57,14 +57,15 @@ Global Flags:
 
 ### Configuration Variables, Files and flags.
 
-| Env Variable      | Config File Variable | Description                                                                |
-|-------------------|----------------------|----------------------------------------------------------------------------|
-| `LOGGING_LEVEL`   | `logging.level`      | Log level (trace, debug, info, warn, error, fatal, panic) (default "info") |
-| `LOGGING_FORMAT`  | `logging.format`     | Log format (text, json) (default "text")                                   |
-| `CRON_EXPRESSION` | `cron.expression`    | The cron schedule to run the command                                       |
-| `M3U_OUTPUT`      | `run.m3u_output`     | Path to the M3U output file (default "index.m3u")                          |
-| `XMLTV_OUTPUT`    | `run.xmltv_output`   | Path to the XMLTV output file (default "index.xml")                        |
-| `CACHE_FILE`      | `run.cache_file`     | Path to the cache file (default "cache.json")                              |
+| Env Variable      | Config File Variable | Description                                                                                                         |
+|-------------------|----------------------|---------------------------------------------------------------------------------------------------------------------|
+| `LOGGING_LEVEL`   | `logging.level`      | Log level (trace, debug, info, warn, error, fatal, panic) (default "info")                                          |
+| `LOGGING_FORMAT`  | `logging.format`     | Log format (text, json) (default "text")                                                                            |
+| `CRON_EXPRESSION` | `cron.expression`    | The cron schedule to run the command                                                                                |
+| `M3U_OUTPUT`      | `run.m3u_output`     | Path to the M3U output file (default "index.m3u")                                                                   |
+| `XMLTV_OUTPUT`    | `run.xmltv_output`   | Path to the XMLTV output file (default "index.xml")                                                                 |
+| `CACHE_FILE`      | `run.cache_file`     | Path to the cache file (default "cache.json")                                                                       |
+| `SCRAPE_COUNT`    | `run.scrape_count`   | Number of guide items to scrape per channel every run. Too high can cause endpoints to return nothing. (default 75) |
 
 ##### Example Configuration File
 
@@ -81,4 +82,5 @@ run:
   xmltv_output: "index.xml"
   m3u_output: "index.m3u"
   cache_file: "cache.json"
+  scrape_count: 75
 ```

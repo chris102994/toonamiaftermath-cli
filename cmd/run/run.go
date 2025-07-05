@@ -52,16 +52,19 @@ func init() {
 	viper.SetDefault("Run.xmltv_output", "index.xml")
 	viper.SetDefault("Run.m3u_output", "index.m3u")
 	viper.SetDefault("Run.cache_file", "cache.json")
+	viper.SetDefault("Run.scrape_count", 75)
 
 	runCmd.Flags().StringP("cron-expression", "c", "", "The cron schedule to run the command")
 	runCmd.Flags().StringP("xmltv-output", "x", "index.xml", "Path to the XMLTV output file")
 	runCmd.Flags().StringP("m3u-output", "m", "index.m3u", "Path to the M3U output file")
 	runCmd.Flags().StringP("cache-file", "C", "cache.json", "Path to the cache file")
+	runCmd.Flags().IntP("scrape-count", "s", 75, "Number of items to scrape from Toonami Aftermath")
 
 	viper.BindPFlag("Cron.Expression", runCmd.Flag("cron-expression"))
 	viper.BindPFlag("Run.xmltv_output", runCmd.Flag("xmltv-output"))
 	viper.BindPFlag("Run.m3u_output", runCmd.Flag("m3u-output"))
 	viper.BindPFlag("Run.cache_file", runCmd.Flag("cache-file"))
+	viper.BindPFlag("Run.scrape_count", runCmd.Flag("scrape-count"))
 }
 
 func NewRunCmd(c *config.Config) *cobra.Command {
@@ -94,7 +97,7 @@ func handleToonamiAftermathScraping() error {
 		}
 	}
 
-	err := toonamiaftermathConfig.Run()
+	err := toonamiaftermathConfig.Run(inputConfig.Run.ScrapeCount)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
