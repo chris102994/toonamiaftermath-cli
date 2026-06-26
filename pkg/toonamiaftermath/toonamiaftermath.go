@@ -88,7 +88,7 @@ func (t *ToonamiAftermath) Run(scrapeCount int) error {
 		"taChannels":  taChannels,
 	}).Trace("Channels")
 
-	for index, taChannel := range taChannels {
+	for _, taChannel := range taChannels {
 		westOffset := taChannel.GetWestOffset()
 		channelSlug := taChannel.GetSlug()
 		if channelSlug == "" {
@@ -122,7 +122,7 @@ func (t *ToonamiAftermath) Run(scrapeCount int) error {
 
 		m3uUrl = string(m3uUrlBytes)
 
-		channelId := fmt.Sprintf("%v", index+1)
+		channelId := taChannel.GetStableID()
 
 		t.M3UBuilder.AddChannel(m3u.NewChannelBuilder().
 			SetDuration(-0).
@@ -132,7 +132,7 @@ func (t *ToonamiAftermath) Run(scrapeCount int) error {
 				SetChannelID(channelId).
 				SetGroupTitle("Toonami Aftermath").
 				SetTvgCountry("us").
-				SetTvgID(taChannel.Name).
+				SetTvgID(channelId).
 				SetTvgLanguage("en").
 				SetTvgName(taChannel.Name).
 				Build()).
@@ -140,7 +140,7 @@ func (t *ToonamiAftermath) Run(scrapeCount int) error {
 
 		t.XMLTVBuilder.AddChannel(
 			xmltv.NewChannelBuilder().
-				SetID(fmt.Sprintf("%v", index+1)).
+				SetID(channelId).
 				AddDisplayName(xmltv.NewDisplayNameBuilder().
 					SetLang("en").
 					SetText(taChannel.Name).

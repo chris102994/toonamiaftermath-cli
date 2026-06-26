@@ -2,6 +2,7 @@ package toonamiaftermath
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -26,6 +27,18 @@ func (c *TAChannel) GetSlug() string {
 		channelSlug = "radio"
 	}
 	return channelSlug
+}
+
+// GetStableID returns a stable, slugified identifier derived from the full
+// channel name (lowercase, non-alphanumeric runs collapsed to a single "-",
+// leading/trailing "-" trimmed). Unlike GetSlug, this is unique per channel
+// (e.g. East vs West) and is used consistently across the M3U channel-id,
+// M3U tvg-id, XMLTV <channel id>, and XMLTV <programme channel> so EPG
+// grabbers can auto-match by tvg-id.
+func (c *TAChannel) GetStableID() string {
+	s := strings.ToLower(c.Name)
+	s = regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(s, "-")
+	return strings.Trim(s, "-")
 }
 
 func (c *TAChannel) GetWestOffset() bool {
